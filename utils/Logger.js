@@ -1,6 +1,4 @@
 const tracer = require('tracer')
-const config = require('config')
-const isProd = config.get('isProd')
 
 /**
  * [logger 输出日志]
@@ -32,4 +30,4 @@ const dailyLogger = tracer.dailyfile({
   }
 })
 
-module.exports = isProd ? dailyLogger : colorLogger
+module.exports = dailyLogger

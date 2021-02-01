@@ -1,18 +1,13 @@
 const Koa = require('koa')
 const app = new Koa()
 const http = require('http')
-const config = require('config')
-const views = require('koa-views')
 const json = require('koa-json')
 const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
 // const xmlParser = require('koa-xml-body')
 const logger = require('koa-logger')
-const requestParams = require('./app/middleware/requestParams')
-const responseFormat = require('./app/middleware/responseFormat')
-const log = require('./app/middleware/log')
 const fs = require('fs')
-const port = config.get('port')
+const port = 3000
 // error handler
 onerror(app)
 
@@ -23,20 +18,7 @@ app.use(bodyparser({
 }))
 app.use(json())
 app.use(logger())
-
-app.use(require('koa-static')(`${__dirname}/public`))
-app.use(views(`${__dirname}/app/view`, {
-  extension: 'pug'
-}))
-
-// handle req
-app.use(requestParams)
-
-// logger
-app.use(log)
-
-// handle res
-app.use(responseFormat)
+app.use(require('koa-static')(`${__dirname}/dist`))
 
 // router
 const routers = fs.readdirSync('./app/router')
