@@ -1,0 +1,1 @@
+初始化使用github上提供的[模板](https://github.com/HeCoffee/koa2-template )
