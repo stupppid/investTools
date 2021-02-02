@@ -21,9 +21,9 @@ app.use(logger())
 app.use(require('koa-static')(`${__dirname}/dist`))
 
 // router
-const routers = fs.readdirSync('./app/router')
+const routers = fs.readdirSync('./app/controller')
 routers.forEach(function (fileName, index) {
-  let router = require(`./app/router/${fileName}`)
+  let router = require(`./app/controller/${fileName}`)
   app.use(router.routes(), router.allowedMethods())
 })
 

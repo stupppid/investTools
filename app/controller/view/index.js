@@ -1,10 +1,14 @@
-const fs = require('fs');
+const fs = require('fs')
 
-module.exports.get = async (ctx, next) => {
-    ctx.response.type = 'html';
-    ctx.response.body = fs.readFileSync("./dist/index.html", {encoding: 'utf8', flag: 'r'});
-}
+const router = require('koa-router')()
 
-module.exports.error = async (ctx, next) => {
-    ctx.response.body = 'view error';
-}
+router.get('/', async (ctx, next) => {
+  ctx.response.type = 'html'
+  ctx.response.body = fs.readFileSync('./dist/index.html', {encoding: 'utf8', flag: 'r'})
+})
+
+router.get('/error', async (ctx, next) => {
+  ctx.response.body = 'view error'
+})
+
+module.exports = router
