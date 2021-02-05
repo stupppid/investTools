@@ -14,7 +14,11 @@ module.exports = {
       '/algorithm': {
         target: 'http://localhost:3000/',  // 接口域名
         changeOrigin: true,  //是否跨域
-      }
+      },
+      '/invest': {
+        target: 'http://localhost:3000/',  // 接口域名
+        changeOrigin: true,  //是否跨域
+      },
     },
 
     // Various Dev Server settings

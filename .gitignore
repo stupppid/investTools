@@ -2,7 +2,7 @@
 node_modules
 package-lock.json
 /dist
-
+/public/uploads
 # Api Log files
 /logs
 *.log

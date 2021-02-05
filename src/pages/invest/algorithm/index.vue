@@ -11,7 +11,7 @@ import { mapState } from 'vuex'
 import rsi from './rsi'
 import knn from './knn'
 export default {
-  name: 'algorithms',
+  name: 'algorithm',
   data () {
     return {
       algoMap: {

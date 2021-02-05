@@ -4,10 +4,16 @@
       <el-menu
         mode="horizontal"
         @select="headerSelect">
-        <el-submenu index="algorithms">
-          <template slot="title">algorithms</template>
+        <el-submenu index="algorithm">
+          <template slot="title">algorithm</template>
           <el-menu-item v-for="(item,i) in algorithms" :key="i" :index="item">
             {{item}}
+          </el-menu-item>
+        </el-submenu>
+        <el-submenu index="uploadData">
+          <template slot="title">uploadData</template>
+          <el-menu-item index="mt5">
+            mt5
           </el-menu-item>
         </el-submenu>
       </el-menu>
@@ -32,9 +38,10 @@ export default {
   },
   methods: {
     headerSelect (value, argv) {
-      if (argv[0] === 'algorithms') {
-        this.$router.push(`/algorithm/${value}`).catch(() => {})
-      }
+      // if (argv[0] === 'algorithm') {
+      //   this.$router.push(`/algorithm/${value}`).catch(() => {})
+      // }
+      this.$router.push(`/${argv.join('/')}`).catch(() => {})
     }
   }
 }
@@ -55,5 +62,8 @@ export default {
 }
 .footer {
   height: 60px;
+}
+.pointer {
+  cursor: pointer;
 }
 </style>
