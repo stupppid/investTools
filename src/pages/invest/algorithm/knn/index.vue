@@ -45,8 +45,8 @@
         <el-button type="text" @click="calculate">calculate</el-button>
       </el-form-item>
     </el-form>
-    <span>
-      <card></card>
+    <span class="card-wrapper" v-for="(knnData, idx) in knnDataAll" :key="idx">
+      <card :knnData="knnData"/>
     </span>
     <el-dialog
       title="input time infomation"
@@ -83,18 +83,16 @@ export default {
       calculateDialogVisible: false,
       rules: {},
       form: {
+        symbol: '',
+        period: '',
         inputLength: 30,
         startTime: moment().startOf('day').format('YYYY-MM-DD HH:mm:ss'),
         endTime: moment().startOf('day').format('YYYY-MM-DD HH:mm:ss')
-      }
+      },
+      knnDataAll: []
     }
   },
   methods: {
-    getData () {
-      knnGetResult(this.form).then(r => {
-        console.log(r)
-      })
-    },
     calculate () {
       this.calculateDialogVisible = true
     },
@@ -113,16 +111,23 @@ export default {
       }
     },
     search () {
-      this.getData()
+      knnGetResult(this.form).then(res => {
+        this.knnDataAll = res.data.data
+      })
     }
   },
   created () {
     this.form.symbol = this.symbols[0]
-    this.form.period = this.periods[0]
-    this.getData()
+    // this.form.period = this.periods[0]
+    this.form.period = 'H1'
+    // this.search()
   }
 }
 </script>
 
-<style lang="sass" scoped>
+<style scoped>
+.card-wrapper {
+  width: 200px;
+  display: inline-block;
+}
 </style>

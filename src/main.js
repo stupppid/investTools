@@ -7,6 +7,7 @@ import Element from 'element-ui'
 import 'sanitize.css'
 import 'element-ui/lib/theme-chalk/index.css'
 import store from './store'
+import './axiosIntercepter'
 
 Vue.use(Element, {
   size: 'mini'

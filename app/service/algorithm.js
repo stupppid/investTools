@@ -38,25 +38,24 @@ function baseSql (symbol, period, inputLength, times = []) {
 
 class Algorithm extends Base {
   async getRaw ({ inputLength, symbol, period, startTime, endTime }) {
-    return {
-      code: 200,
-      data: await this.influxdb.query(baseSql(symbol, period, inputLength, [[startTime, endTime]]))
-    }
+    let t = await this.influxdb.query(baseSql(symbol, period, inputLength, [[startTime, endTime]]))
+    return t
   }
   async knnCalculate ({ inputLength, symbol, period, startTime, endTime }) {
+    inputLength = Number(inputLength)
     const data = await investService.get(symbol, period)
     const startIndex = data.findIndex(v => moment(startTime).isSame(v.time))
     if (startIndex === -1) {
-      throw new Error('no record of the start time')
+      throw new Error('no record of the start time' + startTime)
     }
     let points = []
     let endIndex, tmp
     if (endTime) {
-      endIndex = data.findIndex(v => moment(v.time).isSameOrAfter(endTime)) || data.length - inputLength
+      endIndex = data.findIndex(v => moment(endTime).isSame(v.time)) || data.length - inputLength
     } else {
       endIndex = data.length - inputLength
     }
-    for (let i = startIndex; i < endIndex; i++) {
+    for (let i = startIndex; i <= endIndex; i++) {
       tmp = knn({ data, checkData: data.slice(i, i + inputLength) })
       points.push({
         measurement: 'knnHst',
@@ -66,10 +65,12 @@ class Algorithm extends Base {
         },
         timestamp: data[i].time
       })
+      console.log(`${points.length} knn calculate start`)
     }
     if (points.length > 0) {
       this.influxdb.writePoints(points, {precision: 'm'})
     }
+    console.log('knn calculate success')
   }
 }
 module.exports = new Algorithm()

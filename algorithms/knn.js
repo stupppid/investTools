@@ -1,5 +1,5 @@
 function knn ({ data, checkData, topNum, maxSimilarity }) {
-  let len = data.length - checkData.length * 2
+  let len = data.length - checkData.length * 10
   if (!topNum) {
     topNum = len * 0.001 > 50 ? 50 : Math.ceil(len * 0.001)
   }
@@ -18,6 +18,7 @@ function knn ({ data, checkData, topNum, maxSimilarity }) {
     if (records.length < topNum) {
       records.push({
         time: data[i].time,
+        timeExpand: data[i + checkData.length + 50].time,
         similarity
       })
       records.sort((a, b) => a.similarity - b.similarity)
@@ -25,6 +26,7 @@ function knn ({ data, checkData, topNum, maxSimilarity }) {
       records.pop()
       records.push({
         time: data[i].time,
+        timeExpand: data[i + checkData.length + 50].time,
         similarity
       })
       records.sort((a, b) => a.similarity - b.similarity)

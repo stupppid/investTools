@@ -27,7 +27,7 @@ function baseSql (symbol, period, times = []) {
       return tmp
     }, e))
   }
-  return `SELECT * FROM hst where ${e.toString()}`
+  return `SELECT time,rate FROM hst where ${e.toString()}`
 }
 
 class Invest extends Base {
@@ -41,7 +41,9 @@ class Invest extends Base {
   }
   // 读取基础数据
   getBatch (arr) {
-    return this.influxdb.query(arr.map((v) => baseSql(v.symbol, v.period, v.times)), {precision: 'm'})
+    return this.influxdb.query(arr.map((v) => baseSql(v.symbol, v.period, v.times)), {precision: 'm'}).catch(e => {
+      console.error(e)
+    })
   }
 }
 

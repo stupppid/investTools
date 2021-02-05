@@ -4,38 +4,48 @@ const knn = require('../../../algorithms/knn').knn
 const times = require('influx/lib/src/grammar/times.js')
 const router = require('koa-router')()
 router.prefix(`/algorithm`)
-const knnPeriodMap = {
-  'H1': 3600000000000
-}
 
 router.get('/knn/getResult', async function (ctx, next) {
-  const { inputLength, symbol, period, startTime, endTime, outputLength = 30 } = ctx.request.query
+  const { inputLength, symbol, period, startTime, endTime } = ctx.request.query
   let arr
-  ctx.body = {
-    code: 0,
-    data: await algorithmService.getRaw({
-      inputLength,
-      symbol,
-      period,
-      startTime: Number(times.dateToTime(new Date(startTime), 'n')),
-      endTime: (endTime ? Number(times.dateToTime(new Date(endTime), 'n')) : undefined)
-    }).map(v => {
+  let rawResult = await algorithmService.getRaw({
+    inputLength,
+    symbol,
+    period,
+    startTime: Number(times.dateToTime(new Date(startTime), 'n')),
+    endTime: (endTime ? Number(times.dateToTime(new Date(endTime), 'n')) : undefined)
+  })
+  if (!rawResult || rawResult.length === 0) {
+    ctx.body = {
+      code: -1,
+      message: 'no knn calculated data depend on the searching condition'
+    }
+  } else {
+    let data = await Promise.all(rawResult.map(async v => {
       arr = JSON.parse(v.assumes)
-      arr.reduce((prev, v) => {
+      let querys = arr.reduce((prev, v) => {
         return prev.concat({
           symbol,
           period,
-          times: [[v.time, v.time + knnPeriodMap[period] * outputLength]]
+          times: [[Number(times.dateToTime(new Date(v.time), 'n')),
+            Number(times.dateToTime(new Date(v.timeExpand), 'n'))
+          ]]
         })
       }, [])
       delete v.assumes
+      let t = await investService.getBatch(querys)
       return {
         ...v,
         assumes: {
-          data: investService.getBatch(arr)
+          data: t,
+          similarity: arr.map(v => v.similarity)
         }
       }
-    })
+    }))
+    ctx.body = {
+      code: 0,
+      data
+    }
   }
 })
 
@@ -55,7 +65,8 @@ router.get('/knn/calculate', function (ctx, next) {
   try {
     algorithmService.knnCalculate({ inputLength, symbol: symbol.toUpperCase(), period: period.toUpperCase(), startTime, endTime })
     ctx.body = {
-      code: 200
+      code: 200,
+      message: 'knn calculate start, the process would use a long time'
     }
   } catch (e) {
     ctx.body = {
