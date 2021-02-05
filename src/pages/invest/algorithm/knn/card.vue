@@ -2,9 +2,9 @@
   <el-card :body-style="{ padding: '0px' }">
     <span class="chart" ref="chart"></span>
     <div>
-      <span>{{knnData.time}}</span>
+      <span>{{knnData.symbol}} {{ knnData.period }}</span>
       <div class="bottom">
-        <time>{{knnData.time}}</time>
+        <small>{{ knnData.time }}</small>
         <el-button type="text" class="button" @click="showDetail">detail</el-button>
       </div>
     </div>
@@ -13,8 +13,12 @@
       :visible.sync="detailDialogVisible"
       width="80%">
       <div>
-        <!-- <span class="detailChart" ref="detailChart"></span> -->
+        <span class="detailChart" ref="detailChart"></span>
         <span class="statisticChart" ref="statisticChart"></span>
+      </div>
+      <div>
+        <span class="detailChart" ref="detailChart1"></span>
+        <span class="statisticChart" ref="statisticChart1"></span>
       </div>
     </el-dialog>
   </el-card>
@@ -30,6 +34,11 @@ export default {
       detailDialogVisible: false
     }
   },
+  filter: {
+    toDateTime (v) {
+      return new Date(v).toString()
+    }
+  },
   watch: {
     knnData (v) {
       this.generateChart()
@@ -39,13 +48,18 @@ export default {
     showDetail () {
       this.detailDialogVisible = true
       this.$nextTick(() => {
-        this.detailChart()
+        this.detailChart(this.knnData.assumes, this.$refs.detailChart)
+        this.statisticChart(this.knnData.assumes, this.$refs.statisticChart)
+        // this.detailChart()
+        // this.statisticChart()
       })
     },
-    detailChart () {
-      const data = this.knnData.assumes.data
-      // detail chart
-      const statisticChart = echarts.init(this.$refs.statisticChart)
+    statisticChart (assumes, ref) {
+      const data = assumes.data
+      let xAxisData = []
+      for (let i = 0; i < data[0].length; i++) {
+        xAxisData.push(i)
+      }
       let seriesData = data.reduce((prev, v) => {
         let value = v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1])
         if (!prev.avg) {
@@ -71,12 +85,16 @@ export default {
       seriesData.avg = seriesData.avg.map(v => v / data.length)
       const statisticChartOption = {
         xAxis: {
-          type: 'category'
+          type: 'category',
+          data: xAxisData
         },
         yAxis: {
           type: 'value',
           min: Math.min(seriesData.min),
-          max: Math.min(seriesData.max)
+          max: Math.max(seriesData.max)
+        },
+        tooltip: {
+          trigger: 'axis'
         },
         series: [{
           name: 'avg',
@@ -97,7 +115,46 @@ export default {
         }],
         legend: {}
       }
+      const statisticChart = echarts.init(ref)
       statisticChart.setOption(statisticChartOption)
+    },
+    detailChart (assumes, ref) {
+      const data = assumes.data
+      const realData = data.map((v, idx) => v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]))
+      let xAxisData = []
+      for (let i = 0; i < data[0].length; i++) {
+        xAxisData.push(i)
+      }
+      // detail chart
+      const detailOption = {
+        xAxis: {
+          type: 'category',
+          data: xAxisData
+        },
+        yAxis: {
+          type: 'value',
+          min: Math.min(realData),
+          max: Math.max(realData)
+        },
+        series: assumes.data.map((v, idx) => ({
+          name: idx + '|' + assumes.similarity[idx],
+          data: v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]),
+          type: 'line'
+        })),
+        legend: {},
+        tooltip: {
+          trigger: 'axis'
+        },
+        markLine: {
+          symbol: ['none', 'none'],
+          label: {show: false},
+          data: [
+            {xAxis: Number(this.knnData.inputLength)},
+          ]
+        },
+      }
+      const detailChart = echarts.init(ref)
+      detailChart.setOption(detailOption)
     },
     generateChart () {
       const myChart = echarts.init(this.$refs.chart)
@@ -108,10 +165,12 @@ export default {
         yAxis: {
           type: 'value'
         },
-        series: this.knnData.assumes.data.map(v => ({
+        series: this.knnData.assumes.data.map((v, idx) => ({
+          name: idx,
           data: v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]),
           type: 'line'
-        }))
+        })),
+        legend: {}
       }
       myChart.setOption(option)
     }
@@ -129,8 +188,8 @@ export default {
   display: block;
 }
 .detailChart {
-  width: 200px;
-  height: 200px;
+  width: 50vw;
+  height: 50vh;
   display: block;
 
 }
