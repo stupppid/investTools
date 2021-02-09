@@ -44,15 +44,22 @@ class Algorithm extends Base {
   async knnCalculate ({ inputLength, symbol, period, startTime, endTime }) {
     inputLength = Number(inputLength)
     const data = await investService.get(symbol, period)
-    const startIndex = data.findIndex(v => moment(startTime).isSameOrBefore(v.time))
-    if (startIndex === -1) {
-      throw new Error('no record of the start time' + startTime)
-    }
     let points = []
+    let startIndex
     let endIndex
-    if (endTime) {
-      endIndex = data.findIndex(v => moment(endTime).isSameOrBefore(v.time)) || data.length - inputLength
+    if (startTime) {
+      startIndex = data.findIndex(v => moment(startTime).isSameOrBefore(v.time))
+      if (startIndex === -1) {
+        throw new Error('no record of the start time' + startTime)
+      }
+      if (endTime) {
+        endIndex = data.findIndex(v => moment(endTime).isSameOrBefore(v.time)) || data.length - inputLength
+      } else {
+        endIndex = data.length - inputLength
+      }
     } else {
+      // 计算最后一个
+      startIndex = data.length - inputLength
       endIndex = data.length - inputLength
     }
     for (let i = startIndex; i <= endIndex; i++) {
@@ -80,6 +87,7 @@ class Algorithm extends Base {
       })
     }
     console.log('knn calculate success')
+    return points
   }
 }
 module.exports = new Algorithm()

@@ -1,6 +1,7 @@
 const fs = require('fs')
 const isoOrTimeToDate = require('influx/lib/src/grammar/times.js').isoOrTimeToDate
 const investService = require('../../service/invest')
+const algorithmService = require('../../service/algorithm')
 const router = require('koa-router')()
 router.prefix(`/invest`)
 router.get('/list', function (ctx, next) {
@@ -78,11 +79,35 @@ router.post('/getData', async function (ctx, next) {
 })
 
 router.post('/expert/knn', async function (ctx, next) {
-  let { symbol, period, time } = ctx.request.body
-  // todo 计算KNN，然后输出
+  let { symbol, period, lastData, data } = ctx.request.body
+  let lastClose = lastData.close
+  let rate = (close - lastClose) / lastClose
+  let timestamp = isoOrTimeToDate(data.time)
+  let point = {
+    measurement: 'hst',
+    tags: {symbol, period},
+    fields: {
+      open: parseFloat(data.open),
+      high: parseFloat(data.high),
+      low: parseFloat(data.low),
+      close: parseFloat(data.close),
+      volume: parseFloat(data.volume),
+      rate: rate
+    },
+    timestamp
+  }
+  let p = await investService.saveBatch([point]).then(async v => {
+    let points = await algorithmService.knnCalculate({
+      inputLength: 30,
+      symbol,
+      period
+    })
+    return points
+  })
+  // todo 整合数据
   ctx.body = {
     code: 200,
-    data: 0
+    data: p[0]
   }
 })
 

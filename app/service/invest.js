@@ -33,7 +33,7 @@ function baseSql (symbol, period, times = []) {
 class Invest extends Base {
   // 存储基础数据
   saveBatch (data) {
-    this.influxdb.writePoints(data, {precision: 'm'})
+    return this.influxdb.writePoints(data, {precision: 'm'})
   }
   // 读取基础数据
   get (symbol, period, times = []) {
