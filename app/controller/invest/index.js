@@ -77,4 +77,13 @@ router.post('/getData', async function (ctx, next) {
   }
 })
 
+router.post('/expert/knn', async function (ctx, next) {
+  let { symbol, period, time } = ctx.request.body
+  // todo 计算KNN，然后输出
+  ctx.body = {
+    code: 200,
+    data: 0
+  }
+})
+
 module.exports = router

@@ -33,7 +33,7 @@ function baseSql (symbol, period, inputLength, times = []) {
       return tmp
     }, e))
   }
-  return `SELECT * FROM knnHst where ${e.toString()}`
+  return `SELECT statistics FROM knnHst where ${e.toString()}`
 }
 
 class Algorithm extends Base {
@@ -44,31 +44,40 @@ class Algorithm extends Base {
   async knnCalculate ({ inputLength, symbol, period, startTime, endTime }) {
     inputLength = Number(inputLength)
     const data = await investService.get(symbol, period)
-    const startIndex = data.findIndex(v => moment(startTime).isSame(v.time))
+    const startIndex = data.findIndex(v => moment(startTime).isSameOrBefore(v.time))
     if (startIndex === -1) {
       throw new Error('no record of the start time' + startTime)
     }
     let points = []
-    let endIndex, tmp
+    let endIndex
     if (endTime) {
-      endIndex = data.findIndex(v => moment(endTime).isSame(v.time)) || data.length - inputLength
+      endIndex = data.findIndex(v => moment(endTime).isSameOrBefore(v.time)) || data.length - inputLength
     } else {
       endIndex = data.length - inputLength
     }
     for (let i = startIndex; i <= endIndex; i++) {
-      tmp = knn({ data, checkData: data.slice(i, i + inputLength) })
+      let { records, statistics } = knn({ data, checkData: data.slice(i, i + inputLength), futureData: data.slice(i + inputLength, i + inputLength + 20) })
       points.push({
         measurement: 'knnHst',
         tags: { symbol, period, inputLength },
         fields: {
-          assumes: JSON.stringify(tmp)
+          records: JSON.stringify(records),
+          statistics: JSON.stringify(statistics)
         },
         timestamp: data[i].time
       })
-      console.log(`${points.length} knn calculate start`)
+      console.log(`${i - startIndex}/${endIndex - startIndex} knn calculate finished`)
+      if (points.length > 600) {
+        await this.influxdb.writePoints(points, {precision: 'm'}).catch(e => {
+          console.error(e)
+        })
+        points = []
+      }
     }
     if (points.length > 0) {
-      this.influxdb.writePoints(points, {precision: 'm'})
+      await this.influxdb.writePoints(points, {precision: 'm'}).catch(e => {
+        console.error(e)
+      })
     }
     console.log('knn calculate success')
   }

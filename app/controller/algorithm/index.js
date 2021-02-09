@@ -1,13 +1,10 @@
 const algorithmService = require('../../service/algorithm')
-const investService = require('../../service/invest')
-const knn = require('../../../algorithms/knn').knn
 const times = require('influx/lib/src/grammar/times.js')
 const router = require('koa-router')()
 router.prefix(`/algorithm`)
 
 router.get('/knn/getResult', async function (ctx, next) {
   const { inputLength, symbol, period, startTime, endTime } = ctx.request.query
-  let arr
   let rawResult = await algorithmService.getRaw({
     inputLength,
     symbol,
@@ -21,36 +18,11 @@ router.get('/knn/getResult', async function (ctx, next) {
       message: 'no knn calculated data depend on the searching condition'
     }
   } else {
-    let data = await Promise.all(rawResult.map(async v => {
-      arr = JSON.parse(v.assumes)
-      let querys = arr.reduce((prev, v) => {
-        return prev.concat({
-          symbol,
-          period,
-          times: [[Number(times.dateToTime(new Date(v.time), 'n')),
-            Number(times.dateToTime(new Date(v.timeExpand), 'n'))
-          ]]
-        })
-      }, [])
-      delete v.assumes
-      let t = await investService.getBatch(querys)
-      return {
-        ...v,
-        assumes: {
-          data: t,
-          similarity: arr.map(v => v.similarity)
-        }
-      }
-    }))
     ctx.body = {
       code: 0,
-      data
+      data: rawResult
     }
   }
-})
-
-router.get('/knn/list', function (ctx, next) {
-  ctx.body = 'this is a user list'
 })
 
 router.get('/knn/calculate', function (ctx, next) {
@@ -66,7 +38,7 @@ router.get('/knn/calculate', function (ctx, next) {
     algorithmService.knnCalculate({ inputLength, symbol: symbol.toUpperCase(), period: period.toUpperCase(), startTime, endTime })
     ctx.body = {
       code: 200,
-      message: 'knn calculate start, the process would use a long time'
+      message: 'knn calculate start, the process may take some time.'
     }
   } catch (e) {
     ctx.body = {

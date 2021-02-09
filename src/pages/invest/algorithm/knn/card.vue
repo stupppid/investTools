@@ -48,41 +48,18 @@ export default {
     showDetail () {
       this.detailDialogVisible = true
       this.$nextTick(() => {
-        this.detailChart(this.knnData.assumes, this.$refs.detailChart)
-        this.statisticChart(this.knnData.assumes, this.$refs.statisticChart)
+        // this.detailChart(JSON.parse(this.knnData.statistics), this.$refs.detailChart)
+        this.statisticChart(this.knnData.statistics, this.$refs.statisticChart, this.$refs.statisticChart1)
+        // this.detailChart(this.knnData.statistics, this.$refs.detailChart, this.$refs.detailChart1)
         // this.detailChart()
         // this.statisticChart()
       })
     },
-    statisticChart (assumes, ref) {
-      const data = assumes.data
+    statisticChart ({seriesData, seriesDataF, rawData, futureData, fttx, ftzj}, ref, ref2) {
       let xAxisData = []
-      for (let i = 0; i < data[0].length; i++) {
+      for (let i = 0; i < rawData.length; i++) {
         xAxisData.push(i)
       }
-      let seriesData = data.reduce((prev, v) => {
-        let value = v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1])
-        if (!prev.avg) {
-          prev = {
-            max: [...value],
-            min: [...value],
-            avg: [...value],
-            raw: value
-          }
-        } else {
-          for (let i = 0; i < value.length; i++) {
-            if (prev.max[i] < value[i]) {
-              prev.max[i] = value[i]
-            }
-            if (prev.min[i] > value[i]) {
-              prev.min[i] = value[i]
-            }
-            prev.avg[i] += value[i]
-          }
-        }
-        return prev
-      }, {})
-      seriesData.avg = seriesData.avg.map(v => v / data.length)
       const statisticChartOption = {
         xAxis: {
           type: 'category',
@@ -110,19 +87,56 @@ export default {
           type: 'line'
         }, {
           name: 'raw',
-          data: seriesData.raw,
+          data: rawData,
           type: 'line'
         }],
         legend: {}
       }
       const statisticChart = echarts.init(ref)
       statisticChart.setOption(statisticChartOption)
+
+      xAxisData = []
+      for (let i = 0; i < futureData.length; i++) {
+        xAxisData.push(i)
+      }
+      const futureChartOption = {
+        xAxis: {
+          type: 'category',
+          data: xAxisData
+        },
+        yAxis: {
+          type: 'value',
+          min: Math.min(seriesDataF.min),
+          max: Math.max(seriesDataF.max)
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        series: [{
+          name: 'avg',
+          data: seriesDataF.avg,
+          type: 'line'
+        }, {
+          name: 'min',
+          data: seriesDataF.min,
+          type: 'line'
+        }, {
+          name: 'max',
+          data: seriesDataF.max,
+          type: 'line'
+        }, {
+          name: 'raw',
+          data: futureData,
+          type: 'line'
+        }],
+        legend: {}
+      }
+      const futureChart = echarts.init(ref2)
+      futureChart.setOption(futureChartOption)
     },
-    detailChart (assumes, ref) {
-      const data = assumes.data
-      const realData = data.map((v, idx) => v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]))
+    detailChart ({seriesData, seriesDataF, rawData, futureData, fttx, ftzj}, ref, ref2) {
       let xAxisData = []
-      for (let i = 0; i < data[0].length; i++) {
+      for (let i = 0; i < rawData[0].length; i++) {
         xAxisData.push(i)
       }
       // detail chart
@@ -133,46 +147,39 @@ export default {
         },
         yAxis: {
           type: 'value',
-          min: Math.min(realData),
-          max: Math.max(realData)
+          min: Math.min(rawData),
+          max: Math.max(rawData)
         },
-        series: assumes.data.map((v, idx) => ({
-          name: idx + '|' + assumes.similarity[idx],
-          data: v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]),
+        series: seriesData.map((v, idx) => ({
+          name: idx,
+          data: v,
           type: 'line'
         })),
         legend: {},
         tooltip: {
           trigger: 'axis'
-        },
-        markLine: {
-          symbol: ['none', 'none'],
-          label: {show: false},
-          data: [
-            {xAxis: Number(this.knnData.inputLength)},
-          ]
-        },
+        }
       }
       const detailChart = echarts.init(ref)
       detailChart.setOption(detailOption)
     },
     generateChart () {
-      const myChart = echarts.init(this.$refs.chart)
-      const option = {
-        xAxis: {
-          type: 'category'
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: this.knnData.assumes.data.map((v, idx) => ({
-          name: idx,
-          data: v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]),
-          type: 'line'
-        })),
-        legend: {}
-      }
-      myChart.setOption(option)
+      // const myChart = echarts.init(this.$refs.chart)
+      // const option = {
+      //   xAxis: {
+      //     type: 'category'
+      //   },
+      //   yAxis: {
+      //     type: 'value'
+      //   },
+      //   series: this.knnData.assumes.data.map((v, idx) => ({
+      //     name: idx,
+      //     data: v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]),
+      //     type: 'line'
+      //   })),
+      //   legend: {}
+      // }
+      // myChart.setOption(option)
     }
   },
   mounted () {

@@ -26,18 +26,9 @@
       </el-form-item>
       <el-form-item>
         <el-date-picker
-          v-model="form.startTime"
-          type="datetime"
-          placeholder="start time">
-        </el-date-picker>
-        <i class="el-icon-d-arrow-right pointer" @click="syncTime('endTime')"></i>
-      </el-form-item>
-      <el-form-item>
-        <i class="el-icon-d-arrow-left pointer" @click="syncTime('startTime')"></i>
-        <el-date-picker
-          v-model="form.endTime"
-          type="datetime"
-          placeholder="end time">
+          @change="syncForm"
+          v-model="dates"
+          type="datetimerange">
         </el-date-picker>
       </el-form-item>
       <el-form-item>
@@ -45,7 +36,7 @@
         <el-button type="text" @click="calculate">calculate</el-button>
       </el-form-item>
     </el-form>
-    <span class="card-wrapper" v-for="(knnData, idx) in knnDataAll" :key="idx">
+    <span class="card-wrapper" v-for="(knnData, idx) in knnDataAll" :key="idx"> -->
       <card :knnData="knnData"/>
     </span>
     <el-dialog
@@ -89,7 +80,8 @@ export default {
         startTime: moment().startOf('day').format('YYYY-MM-DD HH:mm:ss'),
         endTime: moment().startOf('day').format('YYYY-MM-DD HH:mm:ss')
       },
-      knnDataAll: []
+      knnDataAll: [],
+      dates: []
     }
   },
   methods: {
@@ -100,26 +92,43 @@ export default {
       knnCalculate({ ...this.form })
       this.calculateDialogVisible = false
     },
-    syncTime (type) {
-      switch (type) {
-        case 'endTime':
-          this.form.endTime = this.form.startTime
-          break
-        case 'startTime':
-          this.form.startTime = this.form.endTime
-          break
-      }
-    },
     search () {
       knnGetResult(this.form).then(res => {
-        this.knnDataAll = res.data.data
+        this.knnDataAll = res.data.data.map(v => ({
+          ...v,
+          // records: JSON.parse(v.records),
+          statistics: JSON.parse(v.statistics)
+        }))
+        let m = Array(20).fill(0)
+        let m2 = Array(20).fill(0)
+        let gap = 0.001
+        let high = 1 + gap
+        let low = 1 - gap
+        let test = this.knnDataAll.reduce((prev, value) => {
+          prev.fttx = prev.fttx.map((v, i) => {
+            if (value.statistics.seriesDataF.avg[i] > high || value.statistics.seriesDataF.avg[i] < low) {
+              m[i]++
+              return v + Number(value.statistics.fttx[i])
+            }
+            return v
+          })
+          // prev.ftzj = value.statistics.ftzj.map((v, i) => v + Number(prev.ftzj[i]))
+          return prev
+        }, {fttx: Array(21).fill(0), ftzj: Array(21).fill(0)})
+        
+        console.log(test, m, test.fttx.map((v, i) => v / m[i]))
       })
+    },
+    syncForm () {
+      this.form.startTime = this.dates[0]
+      this.form.endTime = this.dates[1]
     }
   },
   created () {
     this.form.symbol = this.symbols[0]
     // this.form.period = this.periods[0]
     this.form.period = 'H1'
+    this.dates = [moment().startOf('day').format('YYYY-MM-DD HH:mm:ss'), moment().startOf('day').format('YYYY-MM-DD HH:mm:ss')]
     // this.search()
   }
 }

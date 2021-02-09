@@ -9,7 +9,7 @@ const logger = require('koa-logger')
 const koaBody = require('koa-body')
 const fs = require('fs')
 const path = require('path')
-const port = 3000
+const port = 80
 // error handler
 onerror(app)
 
@@ -22,20 +22,18 @@ onerror(app)
 app.use(json())
 app.use(logger())
 app.use(require('koa-static')(`${__dirname}/dist`))
-
+app.use(koaBody({
+  multipart: true,
+  formidable: {
+      maxFileSize: 2000*1024*1024
+  }
+}));
 // router
 const routers = fs.readdirSync('./app/controller')
 routers.forEach(function (fileName, index) {
   let router = require(`./app/controller/${fileName}`)
   app.use(router.routes(), router.allowedMethods())
 })
-app.use(koaBody({
-  multipart: true,
-  formidable: {
-      uploadDir: path.join(__dirname, 'public/uploads'),
-      keepExtensions: true,
-  }
-}));
 // error-handling
 app.on('error', (err, ctx) => {
   console.error('server error', err, ctx)
