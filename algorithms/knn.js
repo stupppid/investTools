@@ -28,11 +28,11 @@ function knn ({ data, checkData, topNum, futureData }) {
     similarity = Math.sqrt(tmpSum / checkData.length)
     if (records.length < topNum) {
       pushSort(i)
-      i += 5 // 防止出现同天相似K线，导致未来样本数据统计放大
+      // i += 5 // 防止出现同天相似K线，导致未来样本数据统计放大  ps: 同样也会使得后面的历史数据记录变少
     } else if (records[records.length - 1].similarity > similarity) {
       records.pop()
       pushSort(i)
-      i += 5
+      // i += 5
     }
     tmpSum = 0
   }
