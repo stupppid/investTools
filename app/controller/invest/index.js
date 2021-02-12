@@ -3,10 +3,15 @@ const isoOrTimeToDate = require('influx/lib/src/grammar/times.js').isoOrTimeToDa
 const investService = require('../../service/invest')
 const algorithmService = require('../../service/algorithm')
 const router = require('koa-router')()
+const periodMap = {
+  '60': 'H1',
+  '5': 'M5',
+  '15': 'M15',
+  '240': 'H4',
+  '1440': 'D1'
+}
+
 router.prefix(`/invest`)
-router.get('/list', function (ctx, next) {
-  ctx.body = 'this is a user list'
-})
 /**
  * 存储csv数据文件到influxdb
  */
@@ -46,7 +51,7 @@ router.post('/posts', function (ctx, next) {
         rate = (close - lastClose) / lastClose
       }
       lastClose = close
-      let timestamp = isoOrTimeToDate(arr[0])
+      let timestamp = isoOrTimeToDate(arr[0]) // fixme 这里存储的时间本身就是错误的，计算时保存的也是按照错误的来的
       return {
         measurement: 'hst',
         tags: {symbol, period},
@@ -62,7 +67,11 @@ router.post('/posts', function (ctx, next) {
       }
     }).filter(v => v)
     allPoints.shift()
-    investService.saveBatch(allPoints)
+    investService.saveBatch(allPoints).then(r => {
+      console.log('数据存储成功')
+    }).catch(e => {
+      console.error('数据存储失败')
+    })
   })
 
   ctx.body = {
@@ -80,35 +89,85 @@ router.post('/getData', async function (ctx, next) {
 
 router.post('/expert/knn', async function (ctx, next) {
   let { symbol, period, lastData, data } = ctx.request.body
-  let lastClose = lastData.close
-  let rate = (close - lastClose) / lastClose
-  let timestamp = isoOrTimeToDate(data.time)
+  let lastClose = parseFloat(lastData.split(',')[4])
+  let [time, open, high, low, close, volume] = data.split(',')
+  let rate = (parseFloat(close) - lastClose) / lastClose
+  let timestamp = isoOrTimeToDate(time)
   let point = {
     measurement: 'hst',
-    tags: {symbol, period},
+    tags: {symbol: symbol.slice(0, 6), period: periodMap[period]},
     fields: {
-      open: parseFloat(data.open),
-      high: parseFloat(data.high),
-      low: parseFloat(data.low),
-      close: parseFloat(data.close),
-      volume: parseFloat(data.volume),
+      open: parseFloat(open),
+      high: parseFloat(high),
+      low: parseFloat(low),
+      close: parseFloat(close),
+      volume: parseFloat(volume),
       rate: rate
     },
     timestamp
   }
   let p = await investService.saveBatch([point]).then(async v => {
-    let points = await algorithmService.knnCalculate({
+    let p1 = await algorithmService.knnCalculate({
       inputLength: 30,
-      symbol,
-      period
+      symbol: symbol.slice(0, 6),
+      period: periodMap[period]
     })
-    return points
+    return p1
   })
-  // todo 整合数据
-  ctx.body = {
-    code: 200,
-    data: p[0]
-  }
+  let statistics = JSON.parse(p.pop().fields.statistics)
+  let avg = statistics.seriesDataF.avg
+  let max = Math.max(...avg.filter(v => v))
+  let maxId = avg.findIndex(v => v === max)
+  let min = Math.min(...avg.filter(v => v))
+  let minId = avg.findIndex(v => v === min)
+  let str = `${maxId} ${max} ${minId} ${min}`
+  ctx.body = str
+})
+
+router.post('/expert/knnInit', async function (ctx, next) {
+  let { symbol, period, data } = ctx.request.body
+  let arr = data.split('\r\n').reverse()
+  let lastClose
+  let points = arr.reduce((prev, value) => {
+    let [time, open, high, low, close, volume] = value.split(',')
+    if (lastClose === undefined) {
+      lastClose = close
+      return prev
+    }
+    let rate = (parseFloat(close) - lastClose) / lastClose
+    let timestamp = isoOrTimeToDate(time)
+    prev.push({
+      measurement: 'hst',
+      tags: {symbol: symbol.slice(0, 6), period: periodMap[period]},
+      fields: {
+        open: parseFloat(open),
+        high: parseFloat(high),
+        low: parseFloat(low),
+        close: parseFloat(close),
+        volume: parseFloat(volume),
+        rate: rate
+      },
+      timestamp
+    })
+    return prev
+  }, [])
+
+  let p = await investService.saveBatch(points).then(async v => {
+    let p1 = await algorithmService.knnCalculate({
+      inputLength: 30,
+      symbol: symbol.slice(0, 6),
+      period: periodMap[period]
+    })
+    return p1
+  })
+  let statistics = JSON.parse(p.pop().fields.statistics)
+  let avg = statistics.seriesDataF.avg
+  let max = Math.max(...avg.filter(v => v))
+  let maxId = avg.findIndex(v => v === max)
+  let min = Math.min(...avg.filter(v => v))
+  let minId = avg.findIndex(v => v === min)
+  let str = `${maxId} ${max} ${minId} ${min}`
+  ctx.body = str
 })
 
 module.exports = router

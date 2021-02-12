@@ -4,7 +4,7 @@ const algorithmService = require('../app/service/algorithm')
 const moment = require('moment')
 const fs = require('fs')
 let inputLength = '30'
-let symbol = 'EURUSD'
+let symbol = 'NZDUSD'
 let period = 'H1'
 let startTime = '2017.01.01 00:00:00'
 let endTime = '2020.12.31 00:00:00'
@@ -54,7 +54,7 @@ algorithmService.getRaw({
     let maxId = this.knnDataAll[i].statistics.seriesDataF.avg.findIndex(v => v === max)
     let min = Math.min(...this.knnDataAll[i].statistics.seriesDataF.avg.filter(v => v))
     let minId = this.knnDataAll[i].statistics.seriesDataF.avg.findIndex(v => v === min)
-    str += `${moment(this.knnDataAll[i].time).add({ hour: -6 }).format('YYYY.MM.DD HH:mm')} ${maxId} ${max} ${minId} ${min}\r\n`
+    str += `${moment(this.knnDataAll[i].time).format('YYYY.MM.DD HH:mm')} ${maxId} ${max} ${minId} ${min}\r\n`
   }
   writeFileForMT5('./Datas.csv', str)
   // }

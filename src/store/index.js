@@ -5,7 +5,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    symbols: ['EURUSD', 'GBPUSD'],
+    symbols: ['EURUSD', 'GBPUSD', 'USDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'AUDUSD'],
     algorithms: ['knn', 'rsi'],
     periods: ['M5', 'M15', 'H1', 'D1', 'H4']
   },

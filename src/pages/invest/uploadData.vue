@@ -9,7 +9,7 @@
       <el-button size="small" type="primary">点击上传</el-button>
       <div slot="tip" class="el-upload__tip">上传csv格式文件, 名称是 symbol_period.csv</div>
     </el-upload>
-    <button @click="test">dsad</button>
+    <button @click="test">test</button>
   </div>
 </template>
 
@@ -30,13 +30,31 @@ export default {
     test () {
       axios({
         method: 'post',
-        url: '/invest/getData',
+        url: '/invest/expert/knn',
         data: {
-          symbol: 'EURUSD',
+          symbol: 'TEST',
           period: 'H1',
-          times: [[1611316800000]]
+          lastData: {
+            open: 1,
+            high: 1,
+            low: 1,
+            close: 1,
+            volume: 1,
+            time: '2020.01.01 00:00:03'
+          },
+          data: {
+
+            open: 1,
+            high: 1,
+            low: 1,
+            close: 1.1,
+            volume: 1,
+            time: '2020.01.01 00:00:04'
+          }
         }
-      }).then(r => {})
+      }).then(r => {
+        console.log(r)
+      })
     }
   }
 }

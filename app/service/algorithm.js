@@ -48,12 +48,15 @@ class Algorithm extends Base {
     let startIndex
     let endIndex
     if (startTime) {
-      startIndex = data.findIndex(v => moment(startTime).isSameOrBefore(v.time))
+      startIndex = data.findIndex(v => moment(startTime).isSame(v.time))
       if (startIndex === -1) {
         throw new Error('no record of the start time' + startTime)
       }
       if (endTime) {
-        endIndex = data.findIndex(v => moment(endTime).isSameOrBefore(v.time)) || data.length - inputLength
+        endIndex = data.findIndex(v => moment(endTime).isSame(v.time)) || data.length - inputLength
+        if (endIndex === -1) {
+          throw new Error('no record of the end time' + endTime)
+        }
       } else {
         endIndex = data.length - inputLength
       }
@@ -63,7 +66,8 @@ class Algorithm extends Base {
       endIndex = data.length - inputLength
     }
     for (let i = startIndex; i <= endIndex; i++) {
-      let { records, statistics } = knn({ data, checkData: data.slice(i, i + inputLength), futureData: data.slice(i + inputLength, i + inputLength + 20) })
+      let tmp = data.slice(i + inputLength, i + inputLength + 20)
+      let { records, statistics } = knn({ data, checkData: data.slice(i, i + inputLength), futureData: tmp })
       points.push({
         measurement: 'knnHst',
         tags: { symbol, period, inputLength },

@@ -1,8 +1,5 @@
-function knn ({ data, checkData, topNum, futureData }) {
-  let len = data.length - checkData.length * 10
-  if (!topNum) {
-    topNum = 20
-  }
+function knn ({ data, checkData, topNum = 20, futureData = [] }) {
+  let len = data.length - Math.round(data.length * 0.05)
   let tmpSum = 0
   let records = []
   let similarity
@@ -32,7 +29,7 @@ function knn ({ data, checkData, topNum, futureData }) {
     } else if (records[records.length - 1].similarity > similarity) {
       records.pop()
       pushSort(i)
-      // i += 5
+      i += 5
     }
     tmpSum = 0
   }
@@ -95,10 +92,13 @@ function knn ({ data, checkData, topNum, futureData }) {
 
   let fttx = []
   let ftzj = []
-  const fd = futureData.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1])
-  for (let i = 0; i < fd.length; i++) {
-    fttx[i] = ((seriesDataF.avg[i] > 1) && (fd[i] > 1)) || ((seriesDataF.avg[i] < 1) && (fd[i] < 1))
-    ftzj[i] = fd[i] > seriesDataF.min[i] && fd[i] < seriesDataF.max[i]
+  let fd = []
+  if (futureData && futureData.length === futureDataLength) {
+    fd = futureData.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1])
+    for (let i = 0; i < fd.length; i++) {
+      fttx[i] = ((seriesDataF.avg[i] > 1) && (fd[i] > 1)) || ((seriesDataF.avg[i] < 1) && (fd[i] < 1))
+      ftzj[i] = fd[i] > seriesDataF.min[i] && fd[i] < seriesDataF.max[i]
+    }
   }
   return {
     records,
