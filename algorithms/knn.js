@@ -1,5 +1,5 @@
 function knn ({ data, checkData, topNum = 20, futureData = [] }) {
-  let len = data.length - Math.round(data.length * 0.05)
+  let len = data.length - 5000
   let tmpSum = 0
   let records = []
   let similarity
