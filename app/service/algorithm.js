@@ -65,6 +65,7 @@ class Algorithm extends Base {
       startIndex = data.length - inputLength
       endIndex = data.length - inputLength
     }
+    const t = Math.floor((endIndex - startIndex) / 10)
     for (let i = startIndex; i <= endIndex; i++) {
       let tmp = data.slice(i + inputLength, i + inputLength + 20)
       let { records, statistics } = knn({ data, checkData: data.slice(i, i + inputLength), futureData: tmp })
@@ -77,12 +78,14 @@ class Algorithm extends Base {
         },
         timestamp: data[i].time
       })
-      console.log(`${i - startIndex}/${endIndex - startIndex} knn calculate finished`)
       if (points.length > 600) {
         await this.influxdb.writePoints(points, {precision: 'm'}).catch(e => {
           console.error(e)
         })
         points = []
+      }
+      if ((i - startIndex) % t === 0) {
+        console.log(`${i - startIndex}/${endIndex - startIndex} knn calculate finished`)
       }
     }
     if (points.length > 0) {

@@ -19,7 +19,7 @@ router.post('/posts', function (ctx, next) {
   const file = ctx.request.files.file
   const reader = fs.createReadStream(file.path)
   const arr = file.name.split('.')[0].split('_')
-  const symbol = arr[0].toUpperCase()
+  const symbol = arr[0].toUpperCase().slice(0, 6)
   const period = arr[1].toUpperCase()
   if (!period || !symbol) {
     ctx.body = {
@@ -67,11 +67,22 @@ router.post('/posts', function (ctx, next) {
       }
     }).filter(v => v)
     allPoints.shift()
-    investService.saveBatch(allPoints).then(r => {
-      console.log('数据存储成功')
-    }).catch(e => {
-      console.error('数据存储失败')
-    })
+    const onceMax = 100000
+    if (allPoints.length > onceMax) {
+      for (let i = 0; i < Math.ceil(allPoints.length / onceMax); i++) {
+        investService.saveBatch(allPoints.slice(i * onceMax, (i + 1) * onceMax)).then(r => {
+          console.log('数据存储成功')
+        }).catch(e => {
+          console.error('数据存储失败', e)
+        })
+      }
+    } else {
+      investService.saveBatch(allPoints).then(r => {
+        console.log('数据存储成功')
+      }).catch(e => {
+        console.error('数据存储失败', e)
+      })
+    }
   })
 
   ctx.body = {
