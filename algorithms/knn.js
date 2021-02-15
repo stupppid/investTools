@@ -1,6 +1,7 @@
+const knnSampleConfig = require('../config/application').knnSample
+
 function knn ({ data, checkData, topNum = 20, futureData = [] }) {
-  // fixme 由于文件存储的时间和knnInit的时间不一致，选文件初始化的一段时间先用着
-  let len = data.length - 5000
+  let len = data.length - 1000
   let tmpSum = 0
   let records = []
   let similarity
@@ -15,7 +16,7 @@ function knn ({ data, checkData, topNum = 20, futureData = [] }) {
     })
     records.sort((a, b) => a.similarity - b.similarity)
   }
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < len && data[i].time < knnSampleConfig.endTime; i++) {
     let lastR1 = 1
     let lastR2 = 1
     for (let j = 0; j < checkData.length; j++) {
