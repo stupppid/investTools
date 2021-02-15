@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "NODE_ENV=prod node app.js",
+    "start": "node app.js",
     "dev": "nodemon -i /test --inspect --delay 1.5 app.js",
     "debug": "nodemon --inspect app.js",
     "devv": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",

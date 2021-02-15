@@ -19,7 +19,7 @@ timstamp
 /bin/mt4/test     历史回测工具，使用该项目计算后，用 bin/algoTest 导出计算的文件，然后放入mt4数据文件夹下，进行历史回测  
                     历史回测优化时，先固定volume优化margin，根据盈利比得到范围，然后再同时优化volume和margin
                     margin 变大可以略微提高盈利率，但是也会减少符合的单量
-/bin/mt4/kReal    EA程序  
+/bin/mt4/kReal    EA程序, 切记不可以随便改已经运行的图表的周期，或者把其他图表替换当前图表
 
 ## notes
 5分钟不做，gabage in gabage out

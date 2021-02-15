@@ -1,4 +1,5 @@
 function knn ({ data, checkData, topNum = 20, futureData = [] }) {
+  // fixme 由于文件存储的时间和knnInit的时间不一致，选文件初始化的一段时间先用着
   let len = data.length - 5000
   let tmpSum = 0
   let records = []

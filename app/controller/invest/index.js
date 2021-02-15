@@ -160,6 +160,7 @@ router.post('/expert/knnInit', async function (ctx, next) {
       },
       timestamp
     })
+    lastClose = close
     return prev
   }, [])
 
