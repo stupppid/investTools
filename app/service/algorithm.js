@@ -3,6 +3,7 @@ const investService = require('./invest')
 const moment = require('moment')
 const knn = require('../../algorithms/knn').knn
 const Expression = require('influx/lib/src/builder').Expression
+const times = require('influx/lib/src/grammar/times.js')
 
 function baseSql (symbol, period, inputLength, times = []) {
   const e = new Expression()
@@ -13,7 +14,7 @@ function baseSql (symbol, period, inputLength, times = []) {
     e.and.tag('period').equals.value(period.toUpperCase())
   }
   if (inputLength) {
-    e.and.tag('inputLength').equals.value(inputLength)
+    e.and.tag('inputLength').equals.value(String(inputLength))
   }
   if (times && times.length > 0) {
     let tmp, tmpv
@@ -41,6 +42,7 @@ class Algorithm extends Base {
     let t = await this.influxdb.query(baseSql(symbol, period, inputLength, [[startTime, endTime]]))
     return t
   }
+  // 使用原数据计算
   async knnCalculate ({ inputLength, symbol, period, startTime, endTime }) {
     inputLength = Number(inputLength)
     const data = await investService.get(symbol, period)
@@ -93,8 +95,41 @@ class Algorithm extends Base {
         console.error(e)
       })
     }
-    console.log('knn calculate success')
+    console.log(moment().format('YYYY-MM-DD HH:mm:ss') + ' knn calculate success')
     return points
+  }
+  // 传入外部数据计算，并且不保留外部数据
+  async knnCalculateByCheckData ({ checkData, symbol, period }) {
+    const inputLength = checkData.length
+    const data = await investService.get(symbol, period)
+    let points = []
+    let lastData = await this.getRaw({
+      inputLength,
+      symbol,
+      period,
+      startTime: Number(times.dateToTime(checkData[0].time, 'n')),
+      endTime: Number(times.dateToTime(checkData[0].time, 'n'))
+    })
+    if (lastData && lastData.length > 0) {
+      console.log(moment().format('YYYY-MM-DD HH:mm:ss') + ' get knn Result from memory')
+      return JSON.parse(lastData[0].statistics)
+    } else {
+      let { records, statistics } = knn({ data, checkData })
+      points.push({
+        measurement: 'knnHst',
+        tags: { symbol, period, inputLength },
+        fields: {
+          records: JSON.stringify(records),
+          statistics: JSON.stringify(statistics)
+        },
+        timestamp: checkData[0].time
+      })
+      await this.influxdb.writePoints(points, {precision: 'm'}).catch(e => {
+        console.error(e)
+      })
+      console.log(moment().format('YYYY-MM-DD HH:mm:ss') + ' knn calculate success')
+      return statistics
+    }
   }
 }
 module.exports = new Algorithm()

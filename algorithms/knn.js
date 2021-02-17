@@ -1,7 +1,7 @@
 const knnSampleConfig = require('../config/application').knnSample
 
 function knn ({ data, checkData, topNum = 20, futureData = [] }) {
-  let len = data.length - 1000
+  let len = data.length
   let tmpSum = 0
   let records = []
   let similarity

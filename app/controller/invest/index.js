@@ -98,6 +98,7 @@ router.post('/getData', async function (ctx, next) {
   }
 })
 
+// deprecated
 router.post('/expert/knn', async function (ctx, next) {
   let { symbol, period, lastData, data } = ctx.request.body
   let lastClose = parseFloat(lastData.split(',')[4])
@@ -135,6 +136,7 @@ router.post('/expert/knn', async function (ctx, next) {
   ctx.body = str
 })
 
+// deprecated
 router.post('/expert/knnInit', async function (ctx, next) {
   let { symbol, period, data } = ctx.request.body
   let arr = data.split('\r\n').reverse()
@@ -173,6 +175,38 @@ router.post('/expert/knnInit', async function (ctx, next) {
     return p1
   })
   let statistics = JSON.parse(p.pop().fields.statistics)
+  let avg = statistics.seriesDataF.avg
+  let max = Math.max(...avg.filter(v => v))
+  let maxId = avg.findIndex(v => v === max)
+  let min = Math.min(...avg.filter(v => v))
+  let minId = avg.findIndex(v => v === min)
+  let str = `${maxId} ${max} ${minId} ${min}`
+  ctx.body = str
+})
+
+router.post('/expert/knnCheck', async function (ctx, next) {
+  let { symbol, period, data } = ctx.request.body
+  let arr = data.split('\r\n').reverse()
+  let lastClose
+  let checkData = arr.reduce((prev, value) => {
+    let [time, open, high, low, close, volume] = value.split(',')
+    if (lastClose === undefined) {
+      lastClose = close
+      return prev
+    }
+    let rate = (parseFloat(close) - lastClose) / lastClose
+    prev.push({
+      rate: rate,
+      time: new Date(time)
+    })
+    lastClose = close
+    return prev
+  }, [])
+  let statistics = await algorithmService.knnCalculateByCheckData({
+    checkData,
+    symbol: symbol.slice(0, 6),
+    period: periodMap[period]
+  })
   let avg = statistics.seriesDataF.avg
   let max = Math.max(...avg.filter(v => v))
   let maxId = avg.findIndex(v => v === max)
