@@ -1,27 +1,10 @@
 <template>
-  <el-card :body-style="{ padding: '0px' }">
-    <span class="chart" ref="chart"></span>
-    <div>
-      <span>{{knnData.symbol}} {{ knnData.period }}</span>
-      <div class="bottom">
-        <small>{{ knnData.time }}</small>
-        <el-button type="text" class="button" @click="showDetail">detail</el-button>
-      </div>
-    </div>
-    <el-dialog
-      title="input time infomation"
-      :visible.sync="detailDialogVisible"
-      width="80%">
-      <div>
-        <span class="detailChart" ref="detailChart"></span>
-        <span class="statisticChart" ref="statisticChart"></span>
-      </div>
-      <div>
-        <span class="detailChart" ref="detailChart1"></span>
-        <span class="statisticChart" ref="statisticChart1"></span>
-      </div>
-    </el-dialog>
-  </el-card>
+  <div style="display:flex;">
+    <span class="statisticChart" ref="statisticChart"></span>
+    <span class="statisticChart" ref="statisticChart1"></span>
+    <!-- <span class="detailChart" ref="detailChart"></span> -->
+    <!-- <span class="detailChart" ref="detailChart1"></span> -->
+  </div>
 </template>
 
 <script>
@@ -61,6 +44,7 @@ export default {
         xAxisData.push(i)
       }
       const statisticChartOption = {
+        animation: false,
         xAxis: {
           type: 'category',
           data: xAxisData
@@ -96,10 +80,11 @@ export default {
       statisticChart.setOption(statisticChartOption)
 
       xAxisData = []
-      for (let i = 0; i < futureData.length; i++) {
+      for (let i = 0; i < seriesDataF.avg.length; i++) {
         xAxisData.push(i)
       }
       const futureChartOption = {
+        animation: false,
         xAxis: {
           type: 'category',
           data: xAxisData
@@ -162,28 +147,10 @@ export default {
       }
       const detailChart = echarts.init(ref)
       detailChart.setOption(detailOption)
-    },
-    generateChart () {
-      // const myChart = echarts.init(this.$refs.chart)
-      // const option = {
-      //   xAxis: {
-      //     type: 'category'
-      //   },
-      //   yAxis: {
-      //     type: 'value'
-      //   },
-      //   series: this.knnData.assumes.data.map((v, idx) => ({
-      //     name: idx,
-      //     data: v.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1.rate)), [1]),
-      //     type: 'line'
-      //   })),
-      //   legend: {}
-      // }
-      // myChart.setOption(option)
     }
   },
   mounted () {
-    this.generateChart()
+    this.showDetail()
   }
 }
 </script>
@@ -201,8 +168,8 @@ export default {
 
 }
 .statisticChart {
-  width: 50vw;
-  height: 50vh;
+  width: 50%;
+  height: 240px;
   display: block;
 
 }

@@ -36,9 +36,19 @@
         <el-button type="text" @click="calculate">calculate</el-button>
       </el-form-item>
     </el-form>
-    <span class="card-wrapper" v-for="(knnData, idx) in knnDataAll" :key="idx"> -->
-      <card :knnData="knnData"/>
-    </span>
+    <el-table
+      :data="knnDataAll"
+      style="width: 100%">
+      <el-table-column
+        prop="time"
+        label="时间">
+      </el-table-column>
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <card :knnData="props.row"/>
+        </template>
+      </el-table-column>
+    </el-table>
     <el-dialog
       title="input time infomation"
       :visible.sync="calculateDialogVisible"
@@ -77,7 +87,7 @@ export default {
         symbol: '',
         period: '',
         inputLength: 30,
-        startTime: moment().startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+        startTime: moment().startOf('day').add({days: -7}).format('YYYY-MM-DD HH:mm:ss'),
         endTime: moment().startOf('day').format('YYYY-MM-DD HH:mm:ss')
       },
       knnDataAll: [],
@@ -98,25 +108,7 @@ export default {
           ...v,
           // records: JSON.parse(v.records),
           statistics: JSON.parse(v.statistics)
-        }))
-        let m = Array(20).fill(0)
-        let m2 = Array(20).fill(0)
-        let gap = 0.001
-        let high = 1 + gap
-        let low = 1 - gap
-        let test = this.knnDataAll.reduce((prev, value) => {
-          prev.fttx = prev.fttx.map((v, i) => {
-            if (value.statistics.seriesDataF.avg[i] > high || value.statistics.seriesDataF.avg[i] < low) {
-              m[i]++
-              return v + Number(value.statistics.fttx[i])
-            }
-            return v
-          })
-          // prev.ftzj = value.statistics.ftzj.map((v, i) => v + Number(prev.ftzj[i]))
-          return prev
-        }, {fttx: Array(21).fill(0), ftzj: Array(21).fill(0)})
-        
-        console.log(test, m, test.fttx.map((v, i) => v / m[i]))
+        })).reverse()
       })
     },
     syncForm () {
@@ -126,10 +118,9 @@ export default {
   },
   created () {
     this.form.symbol = this.symbols[0]
-    // this.form.period = this.periods[0]
     this.form.period = 'H1'
-    this.dates = [moment().startOf('day').format('YYYY-MM-DD HH:mm:ss'), moment().startOf('day').format('YYYY-MM-DD HH:mm:ss')]
-    // this.search()
+    this.dates = [this.form.startTime, this.form.endTime]
+    this.search()
   }
 }
 </script>
