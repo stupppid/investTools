@@ -20,6 +20,7 @@ timstamp
                     历史回测优化时，先固定volume优化margin，根据盈利比得到范围，然后再同时优化volume和margin
                     margin 变大可以略微提高盈利率，但是也会减少符合的单量
 /bin/mt4/kReal    EA程序, 切记不可以随便改已经运行的图表的周期，或者把其他图表替换当前图表
+kRealBackend.bat  运行EA后台，在Cmd窗口标题栏上右键->属性->选项->取消勾选“快速编辑模式" 防止阻塞
 
 ## notes
 5分钟不做，gabage in gabage out
