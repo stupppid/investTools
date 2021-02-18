@@ -1,11 +1,11 @@
 const knnSampleConfig = require('../config/application').knnSample
 
 function knn ({ data, checkData, topNum = 20, futureData = [] }) {
-  let len = data.length
+  const futureDataLength = 20
+  let len = data.length - checkData.length - futureDataLength - 1
   let tmpSum = 0
   let records = []
   let similarity
-  const futureDataLength = 20
   const pushSort = (i) => {
     records.push({
       time: data[i].time,
