@@ -106,10 +106,11 @@ export default {
       knnGetResult(this.form).then(res => {
         this.knnDataAll = res.data.data.map(v => ({
           ...v,
-          // records: JSON.parse(v.records),
+          records: JSON.parse(v.records),
           statistics: JSON.parse(v.statistics)
         })).reverse()
       })
+      localStorage.setItem('knnForm', JSON.stringify(this.form))
     },
     syncForm () {
       this.form.startTime = this.dates[0]
@@ -119,6 +120,10 @@ export default {
   created () {
     this.form.symbol = this.symbols[0]
     this.form.period = 'H1'
+    let f = localStorage.getItem('knnForm')
+    if (f) {
+      this.form = JSON.parse(f)
+    }
     this.dates = [this.form.startTime, this.form.endTime]
     this.search()
   }

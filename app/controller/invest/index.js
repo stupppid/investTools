@@ -51,6 +51,10 @@ router.post('/posts', function (ctx, next) {
         rate = (close - lastClose) / lastClose
       }
       lastClose = close
+      if (arr[1].indexOf(':') !== -1) {
+        let t = arr.shift()
+        arr[0] = t + ' ' + arr[0]
+      }
       let timestamp = isoOrTimeToDate(arr[0]) // fixme 这里存储的时间本身就是错误的，计算时保存的也是按照错误的来的
       return {
         measurement: 'hst',

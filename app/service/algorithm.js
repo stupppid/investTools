@@ -34,7 +34,7 @@ function baseSql (symbol, period, inputLength, times = []) {
       return tmp
     }, e))
   }
-  return `SELECT statistics FROM knnHst where ${e.toString()}`
+  return `SELECT statistics,records FROM knnHst where ${e.toString()}`
 }
 
 class Algorithm extends Base {

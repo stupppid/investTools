@@ -17,34 +17,18 @@ timstamp
 ## 使用说明
 /bin/mt4/GetData  历史数据导出工具  
 /bin/mt4/test     历史回测工具，使用该项目计算后，用 bin/algoTest 导出计算的文件，然后放入mt4数据文件夹下，进行历史回测  
-                    历史回测优化时，先固定volume优化margin，根据盈利比得到范围，然后再同时优化volume和margin
-                    margin 变大可以略微提高盈利率，但是也会减少符合的单量
-/bin/mt4/kReal    EA程序, 切记不可以随便改已经运行的图表的周期，或者把其他图表替换当前图表
-kRealBackend.bat  运行EA后台，在Cmd窗口标题栏上右键->属性->选项->取消勾选“快速编辑模式" 防止阻塞
+                    历史回测优化时，先固定volume优化margin，根据盈利比得到范围，然后再同时优化volume和margin  
+                    margin 变大可以略微提高盈利率，但是也会减少符合的单量  
+/bin/mt4/kReal    EA程序, 切记不可以随便改已经运行的图表的周期，或者把其他图表替换当前图表  
+kRealBackend.bat  运行EA后台，在Cmd窗口标题栏上右键->属性->选项->取消勾选“快速编辑模式" 防止阻塞  
 
 ## notes
-5分钟不做，gabage in gabage out
-15分钟的数据分析，结果比H1稍差，但是也很强
-H1数据分析很强
-H4不做，样本太少了，单量也少
+KNN算法总结：
+一开始统计的数据包含了自身临近的数据，所以导致最终结论十分离谱，一年EURUSD收益可以达到120倍  
+统计数据去除自身临近数据后，EURUSD近两年的KNN计算同向性还算可以，日线达到53%左右相似度  
+但是从2009年开始到2019进行计算的话，KNN同向性只有49.8%，没有任何参考意义  
 
-H1优化参数 第一次：
-gbpusd  cw = 0.24 margin = 0.0016
-eurusd cw = 0.4 margin = 0
-usdjpy cw = 0.4 margin = 0.0016 
-nzdusd cw = 0.4 margin = 0.0016
-usdcad cw = 0.3 margin = 0.0016
-audusd cw = 0.2 margin = 0.0017
-usdchf 亏损
+KNN同向性的算法失败，实际上基本可以放弃其他基于历史价格数据的机器学习算法了，说明价格本身不具有规律，历史不会重现  
+不过统计数据错误的时候发现，`usdcad usdjpy gbpusd eurusd`这些货币对相对其他的货币对稳一些，`USDCHF`是最不稳的货币对  
 
-H1优化参数 第二次：
-gbpusd  cw = 0.36 margin = 0.0016  最大回撤69%  115倍
-eurusd cw = 0.38  margin = 0.0016 最大回撤60% 119倍
-usdjpy cw = 0.4 margin = 0.0016  最大回撤 62%  21.7倍
-nzdusd cw = 0.38 margin = 0.0018 最大回撤 81%  5.9倍
-usdcad cw = 0.4 margin = 0.0017 最大回撤 35%  119倍
-audusd cw = 0.4 margin = 0.0014 最大回撤  77.5% 9.8倍
-usdchf 亏损
-
-
-可以根据传来的min 和 max 修改基本仓位，可以做个回测优化试试 ---- 发现乘积参数过大会骤然导致亏损，盈利率下降，并且并未提高过多的利润，以后可以再研究
+结束
