@@ -2,8 +2,8 @@
   <div style="display:flex;">
     <span class="statisticChart" ref="statisticChart"></span>
     <span class="statisticChart" ref="statisticChart1"></span>
-    <!-- <span class="detailChart" ref="detailChart"></span> -->
-    <!-- <span class="detailChart" ref="detailChart1"></span> -->
+    <span class="detailChart" ref="detailChart"></span>
+    <span class="detailChart" ref="detailChart1"></span>
   </div>
 </template>
 
@@ -22,20 +22,12 @@ export default {
       return new Date(v).toString()
     }
   },
-  watch: {
-    knnData (v) {
-      this.generateChart()
-    }
-  },
   methods: {
     showDetail () {
       this.detailDialogVisible = true
       this.$nextTick(() => {
-        // this.detailChart(JSON.parse(this.knnData.statistics), this.$refs.detailChart)
+        this.detailChart(this.knnData.records, this.knnData.statistics, this.$refs.detailChart, this.$refs.detailChart1)
         this.statisticChart(this.knnData.statistics, this.$refs.statisticChart, this.$refs.statisticChart1)
-        // this.detailChart(this.knnData.statistics, this.$refs.detailChart, this.$refs.detailChart1)
-        // this.detailChart()
-        // this.statisticChart()
       })
     },
     statisticChart ({seriesData, seriesDataF, rawData, futureData, fttx, ftzj}, ref, ref2) {
@@ -119,7 +111,7 @@ export default {
       const futureChart = echarts.init(ref2)
       futureChart.setOption(futureChartOption)
     },
-    detailChart ({seriesData, seriesDataF, rawData, futureData, fttx, ftzj}, ref, ref2) {
+    detailChart (records, {rawData, futureData}, ref, ref2) {
       let xAxisData = []
       for (let i = 0; i < rawData[0].length; i++) {
         xAxisData.push(i)
@@ -135,11 +127,15 @@ export default {
           min: Math.min(rawData),
           max: Math.max(rawData)
         },
-        series: seriesData.map((v, idx) => ({
+        series: records.map((v, idx) => ({
           name: idx,
-          data: v,
+          data: v.data.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1)), [1]),
           type: 'line'
-        })),
+        })).concat({
+          name: 'raw',
+          data: rawData,
+          type: 'line'
+        }),
         legend: {},
         tooltip: {
           trigger: 'axis'
@@ -147,6 +143,38 @@ export default {
       }
       const detailChart = echarts.init(ref)
       detailChart.setOption(detailOption)
+
+      xAxisData = []
+      for (let i = 0; i < rawData[0].length; i++) {
+        xAxisData.push(i)
+      }
+      // detail chart
+      const detailOption1 = {
+        xAxis: {
+          type: 'category',
+          data: xAxisData
+        },
+        yAxis: {
+          type: 'value',
+          min: Math.min(rawData),
+          max: Math.max(rawData)
+        },
+        series: records.map((v, idx) => ({
+          name: idx,
+          data: v.futureData.reduce((prev, v1) => prev.concat(prev[prev.length - 1] * (1 + v1)), [1]),
+          type: 'line'
+        })).concat({
+          name: 'raw',
+          data: futureData,
+          type: 'line'
+        }),
+        legend: {},
+        tooltip: {
+          trigger: 'axis'
+        }
+      }
+      const detailChart1 = echarts.init(ref2)
+      detailChart1.setOption(detailOption1)
     }
   },
   mounted () {
